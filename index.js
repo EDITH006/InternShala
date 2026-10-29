@@ -1,8 +1,7 @@
-
+```javascript
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 require('dotenv').config();
 
 const routes = require('./routes/api');
@@ -10,31 +9,35 @@ const routes = require('./routes/api');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Allow requests from your deployed Vercel frontend
+// Allow your deployed Vercel frontend
 const allowedOrigins = [
-  'https://internship-portal-khaki.vercel.app',
+  'https://intern-shala-swart.vercel.app',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+// CORS configuration
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests without an Origin header (e.g. direct API tests)
+      // Allow requests without an Origin header
+      // (such as direct API checks and server-to-server requests)
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
+      console.error('Blocked CORS origin:', origin);
       return callback(new Error('Origin not allowed by CORS'));
     },
   })
 );
 
+// Parse JSON request bodies
 app.use(express.json());
 
 // API routes
 app.use('/api', routes);
 
-// Backend health check
+// Root route
 app.get('/', (req, res) => {
   res.json({
     message: 'Student Internship Portal API is running!',
@@ -47,6 +50,13 @@ app.use((err, req, res, next) => {
 
   if (res.headersSent) {
     return next(err);
+  }
+
+  if (err.message === 'Origin not allowed by CORS') {
+    return res.status(403).json({
+      error: 'CORS blocked this request.',
+      origin: req.headers.origin || null,
+    });
   }
 
   res.status(500).json({
@@ -76,3 +86,4 @@ async function startServer() {
 }
 
 startServer();
+```
